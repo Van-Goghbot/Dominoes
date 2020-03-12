@@ -53,7 +53,6 @@ def move(arm,x,y,z,r,p,ya,pnp):
     if arm == 'l':
         pnp._servo_to_pose(pose)
     elif arm == 'r':
-        print("RIGHT ARM")
         pnp._servo_to_pose(pose)
     return x,y,z,r,p,ya
 
@@ -119,8 +118,19 @@ def place(x,y,z,r,p,ya,height,arm,pnp):
         brick_place('r',-0.2823,-1.13965,1.0771,1.08657,-0.387,1.8194,-1.7079,pnp)
     return x,y,z+height,r,p,ya
 
-def pick(arm,pnp,movement_count):
+def pick(arm,pnp,movement_count,sim):
     #Function to pick up a brick with a given arm from a set position
+    global left_arm_range
+    global right_arm_range
+
+    conversion = 0
+    # ----------------------
+    #rospy.init_node('infra_red_listener')
+    rospy.Subscriber("/robot/range/left_hand_range/state",Range,callback_left,queue_size = 1)
+    time.sleep(0.5)
+    rospy.Subscriber("/robot/range/right_hand_range/state",Range,callback_right,queue_size = 1)
+    time.sleep(0.5)
+
     if arm == 'l':
         print ("Picking with left arm")
         #Move to 0.5,0.8,0.5,0,3.14/2,0
@@ -128,27 +138,30 @@ def pick(arm,pnp,movement_count):
         pnp.gripper_open()
         coord = move('l',0.6,0.8,0.5,0,3.14/2,0,pnp)
 
+        if sim != True:
+            while left_arm_range > 0.6:
+                rospy.sleep(0.1)
+
         #simulation.load_brick1()
-        spawn_brick(movement_count)
+        if sim == True:
+            spawn_brick(movement_count)
 
         pnp.gripper_close()
         brick_place('l',1.045,-1.2174,-0.5546,1.8941,1.5558,-1.2412,-0.9172,pnp)
-        # #Move to 0.6,0.5,0.4,0,3.14,-0
-        #brick_place('l',-0.5967,-1.344,0.3188,1.3571,3.059,-1.5673,-2.642)
-        #Move to 0.6,0.5,0.4,0,3.14,3.14/2
-        #brick_place('l',-0.5929,-1.3422,0.3146,1.3544,3.059,-1.5702,-1.072)
         brick_place('l',-0.5929,-1.3422,0.3146,1.3544,3.059-3.14,1.5702,-1.072,pnp)
     elif arm == 'r':
         print ("Picking with right arm")
         #Move tp 0.5,-0.8,0.5,0,3.14/2,0
         brick_place('r',-1.032,-1.222,0.5439,1.897,-1.5479,-1.239,0.9162,pnp)
         pnp.gripper_open()
-        print ("move('r',0.6,-0.8,0.5,0,3.14/2,0,pnp)")
         coord = move('r',0.6,-0.8,0.5,0,3.14/2,0,pnp)
-        print("MOVED")
+        if sim != True:
+            while right_arm_range > 0.6:
+                rospy.sleep(0.1)
 
         #simulation.load_brick2()
-        spawn_brick(movement_count)
+        if sim == True:
+            spawn_brick(movement_count)
 
         pnp.gripper_close()
         brick_place('r',-1.032,-1.222,0.5439,1.897,-1.5479,-1.239,0.9162,pnp)
@@ -157,9 +170,9 @@ def pick(arm,pnp,movement_count):
         #Move to 0.6,-0.5,0.45,0,3.14,3.14/2
         brick_place('r',-0.2823,-1.13965,1.0771,1.08657,-0.387,1.8194,-1.7079,pnp)
 
-def pickandplace(arm,pnp,x,y,z,r,p,ya,height,movement_count):
+def pickandplace(arm,pnp,x,y,z,r,p,ya,height,movement_count,sim):
     #Combined pick and place functions
-    pick(arm,pnp,movement_count)
+    pick(arm,pnp,movement_count,sim)
     place(x,y,z,r,p,ya,height,arm,pnp)
 
 

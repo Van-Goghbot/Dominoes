@@ -118,7 +118,7 @@ def main():
 
     #Get Bezier coordinates for a path
     if mode_sim == True:
-        coords = bezier_interpolation.create_path(10, 35, -3.14/8, 110, 40, 3.14/8, 110)
+        coords = bezier_interpolation.create_path(10, 35, -math.pi/8, 110, 40, math.pi/8, 110)
     else:
         coords = bezier_interpolation.create_path(start_x, start_y, start_angle, end_x, end_y, end_angle, 110)
     #coords = bezier_interpolation.create_path(10,35,20,110,40,10)
@@ -164,15 +164,10 @@ def main():
             if error_check[1] == False:
                 check_list.append(error_check[1])
 
+        #Order the code
         right.sort()
-
         right = right[::-1]
-        #print('right')
-        #print(right)
-
         left.sort()
-        #print('left')
-        #print(left)
 
         if len(check_list) > 0:
             print ("Failed Path")
@@ -180,7 +175,8 @@ def main():
             print("Succesful Path")
 
             #Load table model
-            simulation.load_table()
+            if mode_sim == True:
+                simulation.load_table()
 
             #Call function to run the left arm simultaneously
             rc = subprocess.Popen("python left_placement.py '" + str(left) + "'", shell=True)
@@ -192,12 +188,8 @@ def main():
 
             for coord in right:
                 movement_count += 2
-
                 adjusted_z = table_height + ((float(brick.y)+0.6)*scale_factor*incline_angle)/scale_difference
-
-                print("right")
-                print coord
-                domino.pickandplace('r',right_pnp,coord[1],coord[0],adjusted_z,incline_angle,math.pi,coord[2]+math.pi/2,hover,movement_count)
+                domino.pickandplace('r',right_pnp,coord[1],coord[0],adjusted_z,incline_angle,math.pi,coord[2]+math.pi/2,hover,movement_count,mode_sim)
         return check_list
 
     check_list = run_pnp(coords)
@@ -227,7 +219,8 @@ def main():
         if run_number >= 10:
             break
 
-    simulation.delete_gazebo_models()
+    if mode_sim == True:
+        simulation.delete_gazebo_models()
 
 if __name__ == '__main__':
     sys.exit(main())
